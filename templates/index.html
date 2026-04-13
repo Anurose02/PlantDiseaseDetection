@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Disease Detection - Upload</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #0a1e10;
+      --green-accent: #4ade80;
+      --cream: #f5f0e8;
+      --glass-bg: rgba(8, 24, 12, 0.6);
+      --glass-border: rgba(255,255,255,0.1);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bg-image {
+      position: fixed;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=1600&q=80') center/cover no-repeat;
+      z-index: 0;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(4,16,8,0.85) 0%, rgba(10,40,20,0.75) 60%, rgba(4,20,10,0.90) 100%);
+      z-index: 1;
+    }
+    .grain {
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      z-index: 2;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* Decorative circles */
+    .circle-deco {
+      position: fixed;
+      border-radius: 50%;
+      border: 0.5px solid rgba(74,222,128,0.08);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .c1 { width: 600px; height: 600px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+    .c2 { width: 800px; height: 800px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+    .c3 { width: 1050px; height: 1050px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(4,16,8,0.65), transparent);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--cream);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green-accent);
+      animation: blink 2.5s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .nav-back {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: rgba(255,255,255,0.85); }
+
+    /* Upload card */
+    .upload-wrapper {
+      position: relative;
+      z-index: 5;
+      animation: fadeUp 0.8s ease both;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green-accent);
+      margin-bottom: 14px;
+      display: block;
+    }
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .card-title em { font-style: italic; color: var(--green-accent); }
+    .card-subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.5);
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 36px;
+      backdrop-filter: blur(16px);
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 1.5px dashed rgba(74,222,128,0.3);
+      border-radius: 14px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.active {
+      border-color: rgba(74,222,128,0.7);
+      background: rgba(74,222,128,0.04);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .dz-icon {
+      width: 56px; height: 56px;
+      background: rgba(74,222,128,0.1);
+      border: 0.5px solid rgba(74,222,128,0.25);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .dz-icon svg { width: 24px; height: 24px; stroke: var(--green-accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+    .dz-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 5px; }
+    .dz-sub { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.4); }
+    .dz-badge {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--green-accent);
+      background: rgba(74,222,128,0.08);
+      border: 0.5px solid rgba(74,222,128,0.2);
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    /* Preview */
+    #preview-box {
+      display: none;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    #preview-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 0.5px solid rgba(255,255,255,0.1);
+    }
+    #file-name {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 8px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--green-accent);
+      color: var(--green-dark);
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 16px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .submit-btn:hover {
+      background: #86efac;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(74,222,128,0.3);
+    }
+    .submit-btn:active { transform: scale(0.98); }
+    .btn-ico {
+      width: 24px; height: 24px;
+      background: var(--green-dark);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+
+    .tip {
+      margin-top: 18px;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    /* Loading state */
+    .submit-btn.loading { pointer-events: none; opacity: 0.75; }
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(10,30,16,0.3);
+      border-top-color: var(--green-dark);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="grain"></div>
+  <div class="circle-deco c1"></div>
+  <div class="circle-deco c2"></div>
+  <div class="circle-deco c3"></div>
+
+  <nav>
+    <div class="nav-logo">
+      <span class="nav-dot"></span>
+      LeafScan AI
+    </div>
+    <a href="/" class="nav-back">← Back to Home</a>
+  </nav>
+
+  <div class="upload-wrapper">
+    <div class="card-header">
+      <span class="eyebrow">AI Diagnosis</span>
+      <h1 class="card-title">Upload <em>Leaf</em><br>Image</h1>
+      <p class="card-subtitle">Our model will analyze your photo<br>and identify the disease instantly</p>
+    </div>
+
+    <div class="glass-card">
+      <form action="/predict" method="POST" enctype="multipart/form-data" id="upload-form">
+
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" name="image" accept="image/*" required id="file-input">
+          <div class="dz-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <p class="dz-title">Drop your image here</p>
+          <p class="dz-sub">or click to browse files</p>
+          <span class="dz-badge">JPG · PNG · WEBP</span>
+        </div>
+
+        <div id="preview-box">
+          <img id="preview-img" src="" alt="Preview">
+          <p id="file-name"></p>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span class="btn-ico">→</span>
+          <span id="btn-text">Analyse Leaf</span>
+          <span class="spinner" id="spinner"></span>
+        </button>
+
+      </form>
+      <p class="tip">For best results, use a clear, well-lit photo of the leaf<br>against a plain background</p>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const previewBox = document.getElementById('preview-box');
+    const previewImg = document.getElementById('preview-img');
+    const fileName = document.getElementById('file-name');
+    const form = document.getElementById('upload-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btn-text');
+
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = e => {
+          previewImg.src = e.target.result;
+          fileName.textContent = file.name;
+          previewBox.style.display = 'block';
+          dropZone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    form.addEventListener('submit', () => {
+      submitBtn.classList.add('loading');
+      btnText.textContent = 'Analysing...';
+      spinner.style.display = 'inline-block';
+    });
+  </script>
+
+</body>
+</html>

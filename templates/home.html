@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Disease Detection - Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #0d2e18;
+      --green-mid: #1a5c35;
+      --green-accent: #4ade80;
+      --cream: #f5f0e8;
+      --glass-bg: rgba(10, 28, 16, 0.55);
+      --glass-border: rgba(255,255,255,0.12);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      color: white;
+    }
+
+    /* Background */
+    .bg-image {
+      position: fixed;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1600&q=80') center/cover no-repeat;
+      z-index: 0;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(5,20,10,0.82) 0%, rgba(15,50,25,0.72) 50%, rgba(5,20,10,0.88) 100%);
+      z-index: 1;
+    }
+
+    /* Leaf SVG decorations */
+    .leaf-deco {
+      position: fixed;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .leaf-deco.top-right { top: -60px; right: -60px; width: 380px; transform: rotate(-25deg); }
+    .leaf-deco.bottom-left { bottom: -80px; left: -60px; width: 320px; transform: rotate(155deg); }
+
+    /* Grain texture overlay */
+    .grain {
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      z-index: 2;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* Content */
+    .page {
+      position: relative;
+      z-index: 3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+    }
+
+    /* Nav bar */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(5,20,10,0.6), transparent);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green-accent);
+      animation: blink 2.5s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Hero */
+    .hero { text-align: center; max-width: 760px; animation: fadeUp 0.9s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green-accent);
+      margin-bottom: 24px;
+    }
+    .eyebrow-line { width: 32px; height: 1px; background: var(--green-accent); opacity: 0.6; }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(48px, 8vw, 88px);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--green-accent);
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.8;
+      max-width: 480px;
+      margin: 24px auto 48px;
+    }
+
+    .cta-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--green-accent);
+      color: var(--green-dark);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 28px;
+      border-radius: 100px;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: #86efac;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(74,222,128,0.35);
+    }
+    .btn-arrow {
+      width: 22px; height: 22px;
+      background: var(--green-dark);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      padding: 14px 28px;
+      border-radius: 100px;
+      border: 0.5px solid rgba(255,255,255,0.2);
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.5); color: white; }
+
+    /* Stats strip */
+    .stats-strip {
+      display: flex;
+      gap: 0;
+      margin-top: 72px;
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      animation: fadeUp 0.9s 0.2s ease both;
+    }
+    .stat-item {
+      padding: 24px 36px;
+      text-align: center;
+      flex: 1;
+      border-right: 0.5px solid var(--glass-border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--green-accent);
+      display: block;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* Features */
+    .features-section {
+      margin-top: 80px;
+      width: 100%;
+      max-width: 840px;
+      animation: fadeUp 0.9s 0.35s ease both;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .feature-card {
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 24px 20px;
+      backdrop-filter: blur(10px);
+      transition: background 0.2s, transform 0.25s;
+    }
+    .feature-card:hover {
+      background: rgba(10,40,20,0.7);
+      transform: translateY(-4px);
+    }
+    .fc-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: rgba(74,222,128,0.1);
+      border: 0.5px solid rgba(74,222,128,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .fc-icon svg { width: 18px; height: 18px; stroke: var(--green-accent); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .fc-title { font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 5px; }
+    .fc-desc { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.45); line-height: 1.65; }
+
+    footer {
+      margin-top: 56px;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .stats-strip { flex-direction: column; }
+      .stat-item { border-right: none; border-bottom: 0.5px solid var(--glass-border); }
+      .stat-item:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="grain"></div>
+
+  <!-- Leaf decorations -->
+  <svg class="leaf-deco top-right" viewBox="0 0 200 300" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 10 C160 40, 190 120, 100 290 C10 120, 40 40, 100 10Z" />
+    <line x1="100" y1="10" x2="100" y2="290" stroke="white" stroke-width="2"/>
+    <line x1="100" y1="80" x2="60" y2="120" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="110" x2="145" y2="145" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="150" x2="55" y2="180" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="180" x2="148" y2="210" stroke="white" stroke-width="1"/>
+  </svg>
+  <svg class="leaf-deco bottom-left" viewBox="0 0 200 300" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 10 C160 40, 190 120, 100 290 C10 120, 40 40, 100 10Z" />
+    <line x1="100" y1="10" x2="100" y2="290" stroke="white" stroke-width="2"/>
+    <line x1="100" y1="80" x2="60" y2="120" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="110" x2="145" y2="145" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="150" x2="55" y2="180" stroke="white" stroke-width="1"/>
+  </svg>
+
+  <nav>
+    <div class="nav-logo">
+      <span class="nav-dot"></span>
+      LeafScan AI
+    </div>
+    <span style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:300;">Plant Disease Detection</span>
+  </nav>
+
+  <div class="page">
+    <div class="hero">
+      <!-- <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        Deep Learning · Plant Pathology
+        <span class="eyebrow-line"></span>
+      </div> -->
+      <h1>Diagnose<br>Your <em>Plants</em><br>Instantly</h1>
+      <p class="hero-desc">
+        Upload a leaf image and our AI model identifies the disease and recommends the right pesticide — in under 2 seconds.
+      </p>
+      <div class="cta-group">
+        <a href="/upload" class="btn-primary">
+          Start Detection
+          <span class="btn-arrow">→</span>
+        </a>
+        <a href="#features" class="btn-ghost">Learn more ↓</a>
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="stat-val">98%</span>
+        <span class="stat-lbl">Accuracy</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">50+</span>
+        <span class="stat-lbl">Diseases</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">&lt;2s</span>
+        <span class="stat-lbl">Prediction Time</span>
+      </div>
+    </div>
+
+    <div class="features-section" id="features">
+      <p class="section-label">What we offer</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+          </div>
+          <p class="fc-title">Image Detection</p>
+          <p class="fc-desc">Analyze any leaf photo with our trained convolutional neural network model</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <p class="fc-title">Deep Learning</p>
+          <p class="fc-desc">Powered by a fine-tuned CNN trained on thousands of plant leaf samples</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <p class="fc-title">Fast Results</p>
+          <p class="fc-desc">Get accurate predictions in under 2 seconds for any uploaded image</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+          </div>
+          <p class="fc-title">Pesticide Guide</p>
+          <p class="fc-desc">Curated pesticide recommendations with detailed usage instructions</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <p class="fc-title">High Accuracy</p>
+          <p class="fc-desc">98% detection accuracy validated across diverse crop species</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>Developed as a Deep Learning Project &nbsp;·&nbsp; AI-generated results — consult an expert for confirmation</footer>
+  </div>
+
+</body>
+</html>

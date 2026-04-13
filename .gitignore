@@ -1,0 +1,8 @@
+venv311/
+__pycache__/
+*.pyc
+.env
+*.h5
+*.keras
+dataset/
+uploads/

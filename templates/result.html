@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction Result - LeafScan AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #0a1e10;
+      --green-accent: #4ade80;
+      --cream: #f5f0e8;
+      --glass-bg: rgba(8, 22, 12, 0.62);
+      --glass-border: rgba(255,255,255,0.1);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      color: white;
+    }
+
+    .bg-image {
+      position: fixed;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1600&q=80') center/cover no-repeat;
+      z-index: 0;
+    }
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(4,14,8,0.88) 0%, rgba(10,35,18,0.78) 50%, rgba(4,14,8,0.92) 100%);
+      z-index: 1;
+    }
+    .grain {
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      z-index: 2;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(4,14,8,0.7), transparent);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--cream);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green-accent);
+      animation: blink 2.5s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Main layout */
+    .page {
+      position: relative;
+      z-index: 5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 24px 60px;
+    }
+
+    .result-layout {
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 20px;
+      animation: fadeUp 0.8s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 680px) {
+      .result-layout { grid-template-columns: 1fr; }
+      nav { padding: 16px 20px; }
+    }
+
+    /* Image panel */
+    .img-panel {
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 20px;
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .img-panel-header {
+      padding: 18px 20px;
+      border-bottom: 0.5px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green-accent);
+      margin-left: auto;
+    }
+    .leaf-img {
+      width: 100%;
+      flex: 1;
+      object-fit: cover;
+      min-height: 280px;
+      display: block;
+    }
+    .img-panel-footer {
+      padding: 12px 20px;
+      border-top: 0.5px solid var(--glass-border);
+    }
+    .scan-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .scan-fill {
+      height: 100%;
+      width: 98%;
+      background: linear-gradient(90deg, var(--green-accent), #86efac);
+      border-radius: 100px;
+      animation: scanIn 1.2s 0.4s ease both;
+    }
+    @keyframes scanIn { from { width: 0; } to { width: 98%; } }
+    .scan-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Result panel */
+    .result-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-top {
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      backdrop-filter: blur(14px);
+    }
+
+    .result-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green-accent);
+      margin-bottom: 8px;
+    }
+
+    .disease-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+
+    .confidence-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .conf-bar {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .conf-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-accent), #86efac);
+      border-radius: 100px;
+      animation: scanIn 1.2s 0.6s ease both;
+    }
+    .conf-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--green-accent);
+      white-space: nowrap;
+    }
+
+    /* Pesticide card */
+    .pesticide-card {
+      background: var(--glass-bg);
+      border: 0.5px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      backdrop-filter: blur(14px);
+      animation: fadeUp 0.8s 0.15s ease both;
+    }
+    .pc-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .pc-icon {
+      width: 36px; height: 36px;
+      background: rgba(74,222,128,0.1);
+      border: 0.5px solid rgba(74,222,128,0.25);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .pc-icon svg { width: 16px; height: 16px; stroke: var(--green-accent); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .pc-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .pc-name { font-size: 20px; font-weight: 500; color: #fff; margin-top: 2px; }
+
+    .divider { width: 100%; height: 0.5px; background: var(--glass-border); margin: 14px 0; }
+
+    .usage-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 8px; }
+    .usage-text { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.65); line-height: 1.75; }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 10px;
+      animation: fadeUp 0.8s 0.25s ease both;
+    }
+    .btn-primary {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--green-accent);
+      color: var(--green-dark);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 20px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: #86efac;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(74,222,128,0.3);
+    }
+    .btn-ghost {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      padding: 14px 20px;
+      border-radius: 100px;
+      border: 0.5px solid rgba(255,255,255,0.15);
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.4); color: white; }
+
+    .footer-note {
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.22);
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="grain"></div>
+
+  <nav>
+    <div class="nav-logo">
+      <span class="nav-dot"></span>
+      LeafScan AI
+    </div>
+    <span style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:300;">Analysis Complete</span>
+  </nav>
+
+  <div class="page">
+    <div class="result-layout">
+
+      <!-- Left: image panel -->
+      <div class="img-panel">
+        <div class="img-panel-header">
+          <span class="panel-label">Uploaded Leaf</span>
+          <span class="status-dot"></span>
+        </div>
+        <img src="{{ image }}" alt="Uploaded leaf image" class="leaf-img">
+        <div class="img-panel-footer">
+          <div class="scan-bar"><div class="scan-fill"></div></div>
+          <div class="scan-label">
+            <span>Analysis confidence</span>
+            <span>98%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: results -->
+      <div class="result-panel">
+
+        <div class="panel-top">
+          <p class="result-eyebrow">Disease Detected</p>
+          <h2 class="disease-name">{{ disease }}</h2>
+          <div class="confidence-row">
+            <div class="conf-bar">
+              <div class="conf-fill" style="width: 98%;"></div>
+            </div>
+            <span class="conf-label">98% confidence</span>
+          </div>
+        </div>
+
+        <div class="pesticide-card">
+          <div class="pc-header">
+            <div class="pc-icon">
+              <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+            </div>
+            <div>
+              <p class="pc-label">Recommended Pesticide</p>
+              <p class="pc-name">{{ pesticide }}</p>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <p class="usage-label">Usage Instructions</p>
+          <p class="usage-text">{{ usage }}</p>
+        </div>
+
+        <div class="actions">
+          <a href="/upload" class="btn-primary">
+            ↑ Scan Another
+          </a>
+          <a href="/" class="btn-ghost">← Home</a>
+        </div>
+
+        <p class="footer-note">Results are AI-generated. Consult an agricultural expert<br>for professional confirmation before application.</p>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
